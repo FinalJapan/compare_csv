@@ -1,104 +1,102 @@
 import streamlit as st
 import pandas as pd
-import io
 
 st.set_page_config(page_title="クーポン照合アプリ", layout="wide")
-st.title("🎟️ クーポン照合アプリ（最適化版）")
+st.title("🎟️ クーポン照合アプリ（1ファイル・2シート照合版）")
 
-# ---------- アップローダー ----------
-st.subheader("1️⃣ ファイルをアップロード（CSVまたはExcel）")
+# ファイルアップロード
+file = st.file_uploader("📂 Excelファイルをアップロード", type=["xlsx"])
 
-file1 = st.file_uploader("🗂️ ファイル①（最新・新規データ）", type=["csv", "xlsx"], key="file1")
-file2 = st.file_uploader("🗂️ ファイル②（旧・比較対象データ）", type=["csv", "xlsx"], key="file2")
-
-# ---------- 読み込み関数 ----------
-def load_file(file, label):
-    if not file:
-        return None
-    ext = file.name.split(".")[-1].lower()
-
-    if ext == "csv":
-        try:
-            df = pd.read_csv(io.StringIO(file.getvalue().decode("utf-8")))
-        except:
-            df = pd.read_csv(io.StringIO(file.getvalue().decode("shift_jis")))
-        st.success(f"✅ {label}: CSVファイルを読み込みました")
-        return df
-
-    elif ext == "xlsx":
-        xls = pd.ExcelFile(file)
-        sheet = st.selectbox(f"📄 {label}: シートを選択", xls.sheet_names, key=label)
-        df = pd.read_excel(file, sheet_name=sheet)
-        st.success(f"✅ {label}: Excelのシート「{sheet}」を読み込みました")
-        return df
-
-    else:
-        st.error(f"❌ {label}: 未対応ファイル形式です")
-        return None
-
-# ---------- データ読み込み ----------
-df1 = load_file(file1, "ファイル①")
-df2 = load_file(file2, "ファイル②")
-
-if df1 is not None and df2 is not None:
-    st.subheader("2️⃣ 比較設定")
-
-    key1 = st.selectbox("🔑 ファイル①のクーポンコード列", df1.columns, key="key1")
-    key2 = st.selectbox("🔑 ファイル②のクーポンコード列", df2.columns, key="key2")
-
-    common_cols = list(set(df1.columns) & set(df2.columns))
-    compare_cols = st.multiselect("📝 照合したい列（例：名称、価格、公開期間など）", common_cols)
+if file:
+    # シート選択
+    excel = pd.ExcelFile(file)
+    sheet1 = st.selectbox("🗂 新しいクーポン（依頼表）のシートを選んでください", excel.sheet_names, key="sheet1")
+    sheet2 = st.selectbox("🗂 比較対象（CMS）のシートを選んでください", excel.sheet_names, key="sheet2")
 
     if st.button("🚀 照合する"):
-        # マージ処理
-        merged = pd.merge(
-            df1,
-            df2,
-            left_on=key1,
-            right_on=key2,
-            how="outer",
-            suffixes=('_新', '_旧'),
-            indicator=True
-        )
+        df1 = pd.read_excel(file, sheet_name=sheet1)
+        df2 = pd.read_excel(file, sheet_name=sheet2)
 
-        merged["照合結果"] = merged["_merge"].map({
-            "both": "一致 or 内容比較",
-            "left_only": "🆕 新規追加",
-            "right_only": "❌ 削除された"
+        # 列名のマッピング
+        columns_1 = {
+            "コード": "クーポンＣＤ",
+            "名称": "商品・クーポン名称",
+            "正価": "正価税込",
+            "売価": "売価税込",
+            "開始日": "開始日",
+            "終了日": "終了日"
+        }
+
+        columns_2 = {
+            "コード": "クーポン番号※",
+            "名称": "クーポン名/商品名※",
+            "正価": "割引前価格（税込）",
+            "売価": "割引後価格（税込）",
+            "開始日": "利用開始日時(常/キ/エ)",
+            "終了日": "利用終了日時(常/キ/エ)"
+        }
+
+        # 比較用のDataFrameを整形
+        df1_renamed = df1.rename(columns={
+            columns_1["コード"]: "クーポンコード",
+            columns_1["名称"]: "名称_新",
+            columns_1["正価"]: "正価_新",
+            columns_1["売価"]: "売価_新",
+            columns_1["開始日"]: "開始_新",
+            columns_1["終了日"]: "終了_新"
         })
 
-        # 内容比較
-        diff_flags = []
-        for col in compare_cols:
+        df2_renamed = df2.rename(columns={
+            columns_2["コード"]: "クーポンコード",
+            columns_2["名称"]: "名称_旧",
+            columns_2["正価"]: "正価_旧",
+            columns_2["売価"]: "売価_旧",
+            columns_2["開始日"]: "開始_旧",
+            columns_2["終了日"]: "終了_旧"
+        })
+
+        # マージ（クーポンコードで照合）
+        merged = pd.merge(df1_renamed, df2_renamed, on="クーポンコード", how="outer", indicator=True)
+
+        # 各項目の一致判定
+        for col in ["名称", "正価", "売価", "開始", "終了"]:
             col_new = f"{col}_新"
             col_old = f"{col}_旧"
-            if col_new in merged.columns and col_old in merged.columns:
-                flag_col = f"{col}が一致？"
-                merged[flag_col] = merged[col_new] == merged[col_old]
-                diff_flags.append(flag_col)
+            if col_new in merged and col_old in merged:
+                merged[f"{col}一致"] = merged[col_new] == merged[col_old]
 
-        # 差異フラグまとめて1つの列に
-        if diff_flags:
-            merged["変更あり？"] = merged[diff_flags].apply(lambda row: not all(row), axis=1)
+        # 状態カラムを作成
+        def 判定(row):
+            if row["_merge"] == "left_only":
+                return "🆕 新規追加"
+            elif row["_merge"] == "right_only":
+                return "❌ 削除対象"
+            elif any([
+                row.get("名称一致") is False,
+                row.get("正価一致") is False,
+                row.get("売価一致") is False,
+                row.get("開始一致") is False,
+                row.get("終了一致") is False
+            ]):
+                return "⚠️ 変更あり"
+            else:
+                return "✅ 一致"
 
-        # 表示切替
-        st.subheader("3️⃣ 表示設定")
-        表示モード = st.radio("表示モードを選んでください", ["差異のあるデータのみ", "すべて表示"], horizontal=True)
+        merged["判定"] = merged.apply(判定, axis=1)
 
-        if 表示モード == "差異のあるデータのみ":
-            display_df = merged[(merged["照合結果"] != "一致 or 内容比較") | (merged.get("変更あり？") == True)]
-            st.info(f"📌 差異のあるデータを表示（{len(display_df)}件）")
-        else:
-            display_df = merged
+        # 表示列を整理
+        display_cols = [
+            "クーポンコード", "判定",
+            "名称_新", "名称_旧",
+            "正価_新", "正価_旧",
+            "売価_新", "売価_旧",
+            "開始_新", "開始_旧",
+            "終了_新", "終了_旧"
+        ]
 
-        # 表示列の絞り込み（スッキリ表示）
-        base_cols = [key1 if key1 in display_df.columns else key2, "照合結果", "変更あり？"]
-        new_cols = [f"{col}_新" for col in compare_cols if f"{col}_新" in display_df.columns]
-        old_cols = [f"{col}_旧" for col in compare_cols if f"{col}_旧" in display_df.columns]
+        st.success("✅ 照合完了！結果は以下の通り👇")
+        st.dataframe(merged[display_cols], use_container_width=True)
 
-        final_cols = base_cols + new_cols + old_cols
-        st.dataframe(display_df[final_cols], use_container_width=True)
-
-        # ダウンロード機能
-        csv = display_df.to_csv(index=False, encoding="utf-8-sig")
-        st.download_button("⬇️ 結果をCSVでダウンロード", data=csv, file_name="クーポン照合結果.csv", mime="text/csv")
+        # ダウンロード
+        csv = merged[display_cols].to_csv(index=False, encoding="utf-8-sig")
+        st.download_button("⬇️ 結果CSVをダウンロード", data=csv, file_name="照合結果.csv", mime="text/csv")
