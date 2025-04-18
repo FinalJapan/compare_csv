@@ -58,25 +58,27 @@ if uploaded_file:
         merged["判定"] = merged.apply(get_status, axis=1)
 
         # 表示列の整理（存在する列だけ）
+        # 表示列の整理（存在するものだけ＋「依頼表」「CMS」ラベルをつける）
         display_cols = ["マージ用コード", "判定"]
+        renamed_cols = {
+            "マージ用コード": "クーポンコード",
+            "判定": "判定"
+        }
+        
         for col1, col2 in comparison_columns:
             if col1 in merged.columns and col2 in merged.columns:
                 display_cols += [col1, col2]
-
-        # 🔍表示フィルター（任意）
-        st.markdown("### 🔍 表示オプション")
-        view_option = st.radio("表示を選んでください", ["すべて", "✅ のみ", "❌ のみ"])
-
-        if view_option == "✅ のみ":
-            filtered = merged[merged["判定"] == "✅"]
-        elif view_option == "❌ のみ":
-            filtered = merged[merged["判定"] == "❌"]
-        else:
-            filtered = merged
-
+                renamed_cols[col1] = f"{col1}（依頼表）"
+                renamed_cols[col2] = f"{col2}（CMS）"
+        
+        # 表示用データ作成
+        df_display = merged[display_cols].rename(columns=renamed_cols)
+        
+        # 表示
         st.markdown("### ✅ 照合結果")
-        st.dataframe(filtered[display_cols], use_container_width=True)
-
+        st.dataframe(df_display, use_container_width=True)
+        
         # CSV出力
-        csv = filtered[display_cols].to_csv(index=False, encoding="utf-8-sig")
+        csv = df_display.to_csv(index=False, encoding="utf-8-sig")
         st.download_button("⬇️ 結果CSVをダウンロード", data=csv, file_name="クーポン照合結果.csv", mime="text/csv")
+
