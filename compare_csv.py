@@ -15,8 +15,14 @@ if uploaded_file:
     sheet2 = st.selectbox("📄 比較対象（CMS）", sheet_names, key="sheet2")
 
     if st.button("🚀 照合スタート！"):
-        df1 = pd.read_excel(uploaded_file, sheet_name=sheet1)
-        df2 = pd.read_excel(uploaded_file, sheet_name=sheet2)
+    # 📌依頼表（アプリ）：4行目を見出しに指定（0始まりなので header=3）
+    df1 = pd.read_excel(uploaded_file, sheet_name=sheet1, header=3)
+
+    # 📄CMS側は通常通り1行目（header=0）想定
+    df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=0)
+
+    # ↓このあとは今まで通り処理OK！
+
 
         # 列名トリム（空白や改行を除去）
         df1.columns = df1.columns.str.strip()
