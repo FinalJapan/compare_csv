@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="クーポン照合アプリ（判定：✅/❌）", layout="wide")
-st.title("🎟️ クーポン照合アプリ（1ファイル・2シート・シンプル＆実用特化）")
+st.set_page_config(page_title="クーポン照合アプリ（スッキリ表示版）", layout="wide")
+st.title("🎟️ クーポン照合アプリ（横スクロール最小・縦表示拡張）")
 
 uploaded_file = st.file_uploader("📂 Excelファイル（.xlsx）をアップロードしてください", type="xlsx")
 
@@ -15,29 +15,28 @@ if uploaded_file:
     sheet2 = st.selectbox("📄 比較対象（CMS）", sheet_names, key="sheet2")
 
     if st.button("🚀 照合スタート！"):
-        # 📌 依頼表（4行目がヘッダー）
+        # 📌 読み込み（依頼表は4行目から、CMSは1行目）
         df1 = pd.read_excel(uploaded_file, sheet_name=sheet1, header=3)
-        # 📄 CMS（1行目がヘッダー）
         df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=0)
 
-        # 列名トリム（前後の空白削除）
+        # 列名トリム（空白除去）
         df1.columns = df1.columns.str.strip()
         df2.columns = df2.columns.str.strip()
 
-        # ✅ 列名表示（デフォルト非表示）
+        # 📝 デフォルト非表示の列名確認（必要なら開いて確認）
         with st.expander("📝 シート①（依頼表）の列名一覧", expanded=False):
             st.write(df1.columns.tolist())
 
         with st.expander("📝 シート②（CMS）の列名一覧", expanded=False):
             st.write(df2.columns.tolist())
 
-        # マージキーを統一
+        # マージキー作成
         df1["マージ用コード"] = df1["クーポンＣＤ"]
         df2["マージ用コード"] = df2["クーポン番号※"]
 
         merged = pd.merge(df1, df2, on="マージ用コード", how="outer", indicator=True)
 
-        # 比較対象の列名（そのまま）
+        # 比較対象の列（リネームせずそのまま）
         comparison_columns = [
             ("商品・クーポン名称", "クーポン名/商品名※"),
             ("正価税込", "割引前価格（税込）"),
@@ -46,12 +45,12 @@ if uploaded_file:
             ("終了日", "利用終了日時(常/キ/エ)")
         ]
 
-        # 一致判定列の作成
+        # 各項目の一致判定列
         for col1, col2 in comparison_columns:
             if col1 in merged.columns and col2 in merged.columns:
                 merged[f"{col1} ⇄ {col2} 一致"] = merged[col1] == merged[col2]
 
-        # ✅ or ❌ のみの判定
+        # 判定列（✅ / ❌）
         def get_status(row):
             if row["_merge"] != "both":
                 return "❌"
@@ -62,7 +61,7 @@ if uploaded_file:
 
         merged["判定"] = merged.apply(get_status, axis=1)
 
-        # 表示列とカラム名リネーム（依頼表 / CMS 明示）
+        # 表示列＋カラム名（依頼表 / CMS を併記）
         display_cols = ["マージ用コード", "判定"]
         renamed_cols = {
             "マージ用コード": "クーポンコード",
@@ -77,7 +76,7 @@ if uploaded_file:
 
         df_display = merged[display_cols].rename(columns=renamed_cols)
 
-        # 🔍 フィルター選択（任意）
+        # 🔍 表示フィルター
         st.markdown("### 🔍 表示オプション")
         view_option = st.radio("表示を選んでください", ["すべて", "✅ のみ", "❌ のみ"])
 
@@ -86,10 +85,15 @@ if uploaded_file:
         elif view_option == "❌ のみ":
             df_display = df_display[df_display["判定"] == "❌"]
 
-        # 💡 表示
+        # ✅ 表示（data_editorで列幅最適化！）
         st.markdown("### ✅ 照合結果")
-        st.dataframe(df_display, use_container_width=True)
+        st.data_editor(
+            df_display,
+            use_container_width=True,
+            height=1000,
+            disabled=True
+        )
 
-        # 💾 CSV出力
+        # 💾 ダウンロード
         csv = df_display.to_csv(index=False, encoding="utf-8-sig")
         st.download_button("⬇️ 結果CSVをダウンロード", data=csv, file_name="クーポン照合結果.csv", mime="text/csv")
