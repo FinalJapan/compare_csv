@@ -11,7 +11,7 @@ if uploaded_file:
     sheet_names = xls.sheet_names
 
     st.markdown("### 🗂 シート選択")
-    sheet1 = st.selectbox("🆕 新しいデータ（依頼表）", sheet_names, key="sheet1")
+    sheet1 = st.selectbox("🆕 元データ（依頼表）", sheet_names, key="sheet1")
     sheet2 = st.selectbox("📄 比較対象（CMS）", sheet_names, key="sheet2")
 
     if st.button("🚀 照合スタート！"):
