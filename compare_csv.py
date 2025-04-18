@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="クーポン照合アプリ（シンプル版）", layout="wide")
-st.title("🎟️ クーポン照合アプリ（フィルターなし・全件表示）")
+st.set_page_config(page_title="クーポン照合アプリ", layout="wide")
+st.title("🎟️ クーポン照合アプリ")
 
 uploaded_file = st.file_uploader("📂 Excelファイル（.xlsx）をアップロードしてください", type="xlsx")
 
