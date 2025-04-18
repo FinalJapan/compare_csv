@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="クーポン照合アプリ（最新版）", layout="wide")
-st.title("🎟️ クーポン照合アプリ（フィルター完全対応版）")
+st.set_page_config(page_title="クーポン照合アプリ（シンプル版）", layout="wide")
+st.title("🎟️ クーポン照合アプリ（フィルターなし・全件表示）")
 
 uploaded_file = st.file_uploader("📂 Excelファイル（.xlsx）をアップロードしてください", type="xlsx")
 
@@ -15,7 +15,7 @@ if uploaded_file:
     sheet2 = st.selectbox("📄 比較対象（CMS）", sheet_names, key="sheet2")
 
     if st.button("🚀 照合スタート！"):
-        # 読み込み
+        # ファイル読み込み
         df1 = pd.read_excel(uploaded_file, sheet_name=sheet1, header=3)
         df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=0)
 
@@ -36,7 +36,7 @@ if uploaded_file:
 
         merged = pd.merge(df1, df2, on="マージ用コード", how="outer", indicator=True)
 
-        # 比較対象列
+        # 比較カラム
         comparison_columns = [
             ("商品・クーポン名称", "クーポン名/商品名※"),
             ("正価税込", "割引前価格（税込）"),
@@ -45,7 +45,7 @@ if uploaded_file:
             ("終了日", "利用終了日時(常/キ/エ)")
         ]
 
-        # 一致判定列
+        # 一致判定
         for col1, col2 in comparison_columns:
             if col1 in merged.columns and col2 in merged.columns:
                 merged[f"{col1} ⇄ {col2} 一致"] = merged[col1] == merged[col2]
@@ -61,18 +61,7 @@ if uploaded_file:
 
         merged["判定"] = merged.apply(get_status, axis=1)
 
-        # 🔍 表示フィルター
-        st.markdown("### 🔍 表示オプション")
-        view_option = st.radio("表示を選んでください", ["すべて", "✅ のみ", "❌ のみ"])
-
-        if view_option == "✅ のみ":
-            filtered_df = merged[merged["判定"] == "✅"]
-        elif view_option == "❌ のみ":
-            filtered_df = merged[merged["判定"] == "❌"]
-        else:
-            filtered_df = merged
-
-        # 表示列定義 & カラム名置き換え辞書
+        # 表示列＋リネーム
         display_cols = ["マージ用コード", "判定"]
         renamed_cols = {
             "マージ用コード": "クーポンコード",
@@ -85,11 +74,10 @@ if uploaded_file:
                 renamed_cols[col1] = f"{col1}（依頼表）"
                 renamed_cols[col2] = f"{col2}（CMS）"
 
-        # フィルター後のデータをリネームして表示用に
-        df_display = filtered_df[display_cols].rename(columns=renamed_cols)
+        df_display = merged[display_cols].rename(columns=renamed_cols)
 
-        # ✅ 表示（横スクロールなし、縦スクロール対応）
-        st.markdown("### ✅ 照合結果")
+        # 表示（縦スクロール対応、横スクロールなし）
+        st.markdown("### ✅ 照合結果（全件表示）")
         st.data_editor(
             df_display,
             use_container_width=True,
@@ -97,6 +85,6 @@ if uploaded_file:
             disabled=True
         )
 
-        # 💾 CSVダウンロード
+        # ダウンロード
         csv = df_display.to_csv(index=False, encoding="utf-8-sig")
         st.download_button("⬇️ 結果CSVをダウンロード", data=csv, file_name="クーポン照合結果.csv", mime="text/csv")
