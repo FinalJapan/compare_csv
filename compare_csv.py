@@ -68,8 +68,8 @@ if uploaded_file:
         for col1, col2 in comparison_columns:
             if col1 in merged.columns and col2 in merged.columns:
                 display_cols += [col1, col2]
-                renamed_cols[col1] = f"（依頼表）"
-                renamed_cols[col2] = f"（CMS）"
+                renamed_cols[col1] = f"{col1}（依頼表）"
+                renamed_cols[col2] = f"{col2}（CMS）"
         
         # 表示用データ作成
         df_display = merged[display_cols].rename(columns=renamed_cols)
