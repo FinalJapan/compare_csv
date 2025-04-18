@@ -7,10 +7,17 @@ st.title("📊 CSVファイル比較くん（Streamlit版）")
 file1 = st.file_uploader("CSVファイル①をアップロード", type="csv")
 file2 = st.file_uploader("CSVファイル②をアップロード", type="csv")
 
-if file1 and file2:
-    # ファイル読み込み
-    df1 = pd.read_csv(file1)
-    df2 = pd.read_csv(file2)
+# ファイル読み込み（エンコード対策付き）
+try:
+    df1 = pd.read_csv(file1, encoding="utf-8")
+except UnicodeDecodeError:
+    df1 = pd.read_csv(file1, encoding="shift_jis")
+
+try:
+    df2 = pd.read_csv(file2, encoding="utf-8")
+except UnicodeDecodeError:
+    df2 = pd.read_csv(file2, encoding="shift_jis")
+
 
     # 比較キー選択（1列目をデフォルトに）
     key = st.selectbox("🔑 比較するキー（IDなど）を選んでください", df1.columns)
