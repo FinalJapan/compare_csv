@@ -90,7 +90,13 @@ if uploaded_file:
         st.markdown("### ✅ 照合結果")
         
         # 高さを指定（例：600px）して縦スクロールできるようにする
-        st.dataframe(df_display, use_container_width=True, height=600)
+        st.data_editor(
+            df_display,
+            use_container_width=True,
+            height=600,
+            disabled=True  # 編集できないようにする（表示専用）
+        )
+
 
 
         # 💾 CSV出力
