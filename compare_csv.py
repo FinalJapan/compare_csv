@@ -14,12 +14,12 @@ if uploaded_file:
     sheet1 = st.selectbox("🆕 新しいデータ（依頼表）", sheet_names, key="sheet1")
     sheet2 = st.selectbox("📄 比較対象（CMS）", sheet_names, key="sheet2")
 
-    if st.button("🚀 照合スタート！"):
-    # 📌依頼表（アプリ）：4行目を見出しに指定（0始まりなので header=3）
-    df1 = pd.read_excel(uploaded_file, sheet_name=sheet1, header=3)
-
-    # 📄CMS側は通常通り1行目（header=0）想定
-    df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=0)
+if st.button("🚀 照合スタート！"):
+        # 📌依頼表（アプリ）：4行目を見出しに指定（0始まりなので header=3）
+        df1 = pd.read_excel(uploaded_file, sheet_name=sheet1, header=3)
+    
+        # 📄CMS側は通常通り1行目（header=0）想定
+        df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=0)
 
     # ↓このあとは今まで通り処理OK！
 
