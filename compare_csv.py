@@ -23,8 +23,12 @@ if uploaded_file:
         df1.columns = df1.columns.str.strip()
         df2.columns = df2.columns.str.strip()
 
-        st.write("✅ シート①の列名:", df1.columns.tolist())
-        st.write("✅ シート②の列名:", df2.columns.tolist())
+    with st.expander("✅ シート①（依頼表）の列名", expanded=False):
+        st.write(df1.columns.tolist())
+
+    with st.expander("✅ シート②（CMS）の列名", expanded=False):
+        st.write(df2.columns.tolist())
+
 
         # マージキー統一（クーポンコード）
         df1["マージ用コード"] = df1["クーポンＣＤ"]
