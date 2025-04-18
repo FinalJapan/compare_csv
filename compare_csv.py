@@ -14,7 +14,7 @@ if uploaded_file:
     sheet1 = st.selectbox("🆕 新しいデータ（依頼表）", sheet_names, key="sheet1")
     sheet2 = st.selectbox("📄 比較対象（CMS）", sheet_names, key="sheet2")
 
-    if st.button("🚀 照合スタート！"):
+if st.button("🚀 照合スタート！"):
     # シート読み込み（ここでdf1, df2を作る！）
     df1 = pd.read_excel(uploaded_file, sheet_name=sheet1, header=3)
     df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=0)
