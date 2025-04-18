@@ -1,22 +1,25 @@
 import streamlit as st
 import pandas as pd
+import io
 
 st.title("📊 CSVファイル比較くん（Streamlit版）")
 
-# ファイルアップロード
 file1 = st.file_uploader("CSVファイル①をアップロード", type="csv")
 file2 = st.file_uploader("CSVファイル②をアップロード", type="csv")
 
-# ファイル読み込み（エンコード対策付き）
-try:
-    df1 = pd.read_csv(file1, encoding="utf-8")
-except UnicodeDecodeError:
-    df1 = pd.read_csv(file1, encoding="shift_jis")
+if file1 and file2:
+    try:
+        df1 = pd.read_csv(io.StringIO(file1.getvalue().decode("utf-8")))
+    except UnicodeDecodeError:
+        df1 = pd.read_csv(io.StringIO(file1.getvalue().decode("shift_jis")))
 
-try:
-    df2 = pd.read_csv(file2, encoding="utf-8")
-except UnicodeDecodeError:
-    df2 = pd.read_csv(file2, encoding="shift_jis")
+    try:
+        df2 = pd.read_csv(io.StringIO(file2.getvalue().decode("utf-8")))
+    except UnicodeDecodeError:
+        df2 = pd.read_csv(io.StringIO(file2.getvalue().decode("shift_jis")))
+
+    # ↓あとは比較処理！
+
 
 
     # 比較キー選択（1列目をデフォルトに）
