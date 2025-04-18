@@ -100,3 +100,9 @@ if file:
         # ダウンロード
         csv = merged[display_cols].to_csv(index=False, encoding="utf-8-sig")
         st.download_button("⬇️ 結果CSVをダウンロード", data=csv, file_name="照合結果.csv", mime="text/csv")
+
+
+# デバッグ用：列名を表示
+st.write("🧾 シート①の列名一覧（依頼表）:", list(df1.columns))
+st.write("🧾 シート②の列名一覧（CMS）:", list(df2.columns))
+
