@@ -88,7 +88,7 @@ if uploaded_file:
 
         # 💡 表示
         st.markdown("### ✅ 照合結果")
-        st.dataframe(df_display, use_container_width=True)
+        st.dataframe(df_display)  # 自動で適切な幅に調整
 
         # 💾 CSV出力
         csv = df_display.to_csv(index=False, encoding="utf-8-sig")
