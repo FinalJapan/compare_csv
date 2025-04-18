@@ -38,7 +38,7 @@ if st.button("🚀 照合スタート！"):
     df1["マージ用コード"] = df1["クーポンＣＤ"]
     df2["マージ用コード"] = df2["クーポン番号※"]
 
-        merged = pd.merge(df1, df2, on="マージ用コード", how="outer", indicator=True)
+    merged = pd.merge(df1, df2, on="マージ用コード", how="outer", indicator=True)
 
         # 比較対象の列名（そのまま）
         comparison_columns = [
