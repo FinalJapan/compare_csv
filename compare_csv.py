@@ -15,19 +15,23 @@ if uploaded_file:
     sheet2 = st.selectbox("📄 比較対象（CMS）", sheet_names, key="sheet2")
 
     if st.button("🚀 照合スタート！"):
-        # 📌依頼表は4行目がヘッダー（header=3）
-        df1 = pd.read_excel(uploaded_file, sheet_name=sheet1, header=3)
-        df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=0)
+    # シート読み込み（ここでdf1, df2を作る！）
+    df1 = pd.read_excel(uploaded_file, sheet_name=sheet1, header=3)
+    df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=0)
 
-        # 列名整形
-        df1.columns = df1.columns.str.strip()
-        df2.columns = df2.columns.str.strip()
+    # 列名トリム
+    df1.columns = df1.columns.str.strip()
+    df2.columns = df2.columns.str.strip()
 
+    # ✅ 列名を確認（ここでexpanderを使う！）
     with st.expander("✅ シート①（依頼表）の列名", expanded=False):
         st.write(df1.columns.tolist())
 
     with st.expander("✅ シート②（CMS）の列名", expanded=False):
         st.write(df2.columns.tolist())
+
+    # ・・・以下、照合ロジックへ続く
+
 
 
         # マージキー統一（クーポンコード）
