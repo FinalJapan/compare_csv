@@ -24,11 +24,11 @@ if st.button("🚀 照合スタート！"):
     df2.columns = df2.columns.str.strip()
 
     # ✅ 列名を確認（ここでexpanderを使う！）
-    with st.expander("✅ シート①（依頼表）の列名", expanded=False):
-        st.write(df1.columns.tolist())
+   # with st.expander("✅ シート①（依頼表）の列名", expanded=False):
+        #st.write(df1.columns.tolist())
 
-    with st.expander("✅ シート②（CMS）の列名", expanded=False):
-        st.write(df2.columns.tolist())
+    #with st.expander("✅ シート②（CMS）の列名", expanded=False):
+       # st.write(df2.columns.tolist())
 
     # ・・・以下、照合ロジックへ続く
 
