@@ -1,33 +1,37 @@
-# compare_csv.py
+import streamlit as st
 import pandas as pd
-import sys
 
-# 引数チェック
-if len(sys.argv) != 3:
-    print("使い方：python compare_csv.py data1.csv data2.csv")
-    sys.exit()
+st.title("📊 CSVファイル比較くん（Streamlit版）")
 
-# ファイル読み込み
-file1 = sys.argv[1]
-file2 = sys.argv[2]
+# ファイルアップロード
+file1 = st.file_uploader("CSVファイル①をアップロード", type="csv")
+file2 = st.file_uploader("CSVファイル②をアップロード", type="csv")
 
-df1 = pd.read_csv(file1)
-df2 = pd.read_csv(file2)
+if file1 and file2:
+    # ファイル読み込み
+    df1 = pd.read_csv(file1)
+    df2 = pd.read_csv(file2)
 
-# 比較に使うキー（1列目と仮定）
-key = df1.columns[0]
+    # 比較キー選択（1列目をデフォルトに）
+    key = st.selectbox("🔑 比較するキー（IDなど）を選んでください", df1.columns)
 
-# データをマージ（突き合わせ）
-merged = pd.merge(df1, df2, on=key, how='outer', suffixes=('_file1', '_file2'), indicator=True)
+    if st.button("📌 比較する"):
+        # データ突き合わせ
+        merged = pd.merge(df1, df2, on=key, how='outer', suffixes=('_file1', '_file2'), indicator=True)
 
-# 状態をわかりやすくする
-merged['_状態'] = merged['_merge'].map({
-    'both': '一致 or 内容比較必要',
-    'left_only': '削除された',
-    'right_only': '新規追加'
-})
+        # 状態の説明を追加
+        merged['状態'] = merged['_merge'].map({
+            'both': '一致 or 内容違い',
+            'left_only': '削除された',
+            'right_only': '新規追加'
+        })
 
-# 結果を保存
-merged.to_csv('comparison_result.csv', index=False, encoding='utf-8-sig')
+        st.success("✅ 比較完了！結果は以下のとおり👇")
 
-print("✅ 比較完了！結果を comparison_result.csv に出力しました。")
+        # 表示
+        st.dataframe(merged)
+
+        # ダウンロードボタン
+        csv = merged.to_csv(index=False, encoding='utf-8-sig')
+        st.download_button("⬇️ 結果をCSVでダウンロード", data=csv, file_name='比較結果.csv', mime='text/csv')
+
