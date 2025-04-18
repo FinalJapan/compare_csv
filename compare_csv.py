@@ -71,15 +71,8 @@ if uploaded_file:
         for col1, col2 in comparison_columns:
             if col1 in merged.columns and col2 in merged.columns:
                 display_cols += [col1, col2]
-                renamed_cols[col1] = f"{col1}（依頼表）"
-                renamed_cols[col2] = f"{col2}（CMS）"
-# 表示対象列の順番を調整
-# 1. 一旦判定を取り除く
-# 2. 最後に判定を追加する
-
-        if "判定" in display_cols:
-            display_cols.remove("判定")
-        display_cols.append("判定")
+                renamed_cols[col1] = f"{col1}①"
+                renamed_cols[col2] = f"{col2}②"
 
         df_display = merged[display_cols].rename(columns=renamed_cols)
 
