@@ -14,19 +14,23 @@ if uploaded_file:
     sheet1 = st.selectbox("🆕 元データ（依頼表）", sheet_names, key="sheet1")
     sheet2 = st.selectbox("📄 比較対象（CMS）", sheet_names, key="sheet2")
 
-    if st.button("🚀 照合スタート！"):
-        # ファイル読み込み
-        df1 = pd.read_excel(uploaded_file, sheet_name=sheet1, header=3)
-        # 一時的に読み込んでプレビュー（headerなし）
-        df2_preview = pd.read_excel(uploaded_file, sheet_name=sheet2, header=None)
-        
-        # ユーザーに「ヘッダーにする行番号」を選ばせる
-        max_preview_rows = min(len(df2_preview), 10)  # 最大10行まで表示
-        header_row_index = st.selectbox("📌 CMSデータのヘッダー行を選んでください（0から始まる）", list(range(max_preview_rows)), index=0)
-        
-        # 選ばれた行番号をヘッダーとして再読込！
-        df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=header_row_index)
+    # =============================
+    # 🔍 CMSプレビューとヘッダー選択
+    # =============================
+    df2_preview = pd.read_excel(uploaded_file, sheet_name=sheet2, header=None)
+    st.markdown("### 🔎 CMSシートの先頭行プレビュー")
+    st.dataframe(df2_preview.head(10), use_container_width=True)
 
+    max_preview_rows = min(len(df2_preview), 10)
+    header_row_index = st.selectbox("📌 CMSのヘッダー行（0始まり）を選んでください", list(range(max_preview_rows)), index=0)
+
+    # =============================
+    # 🚀 照合スタートボタン
+    # =============================
+    if st.button("🚀 照合スタート！"):
+        # ファイル読み込み（依頼表：3行目ヘッダー、CMS：選択された行をヘッダーに）
+        df1 = pd.read_excel(uploaded_file, sheet_name=sheet1, header=3)
+        df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=header_row_index)
 
         # 列名トリム（空白除去）
         df1.columns = df1.columns.str.strip()
@@ -39,7 +43,7 @@ if uploaded_file:
         with st.expander("📝 シート②（CMS）の列名一覧", expanded=False):
             st.write(df2.columns.tolist())
 
-        # マージ用コード列の存在確認
+        # 必須列チェック
         if "クーポン番号※" not in df2.columns:
             st.error("❌ ファイル②に『クーポン番号※』という列が見つかりませんでした。")
             st.stop()
