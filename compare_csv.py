@@ -19,6 +19,12 @@ if uploaded_file:
         df1 = pd.read_excel(uploaded_file, sheet_name=sheet1, header=3)
         df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=0)
 
+        if "クーポン番号※" in df2.columns:
+        df2["マージ用コード"] = df2["クーポン番号※"]
+    else:
+        st.error("❌ ファイル②に『クーポン番号※』という列が見つかりませんでした。")
+        st.stop()
+
         # 列名トリム
         df1.columns = df1.columns.str.strip()
         df2.columns = df2.columns.str.strip()
