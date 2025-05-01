@@ -17,7 +17,16 @@ if uploaded_file:
     if st.button("🚀 照合スタート！"):
         # ファイル読み込み
         df1 = pd.read_excel(uploaded_file, sheet_name=sheet1, header=3)
-        df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=1)
+        # 一時的に読み込んでプレビュー（headerなし）
+        df2_preview = pd.read_excel(uploaded_file, sheet_name=sheet2, header=None)
+        
+        # ユーザーに「ヘッダーにする行番号」を選ばせる
+        max_preview_rows = min(len(df2_preview), 10)  # 最大10行まで表示
+        header_row_index = st.selectbox("📌 CMSデータのヘッダー行を選んでください（0から始まる）", list(range(max_preview_rows)), index=0)
+        
+        # 選ばれた行番号をヘッダーとして再読込！
+        df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=header_row_index)
+
 
         # 列名トリム（空白除去）
         df1.columns = df1.columns.str.strip()
