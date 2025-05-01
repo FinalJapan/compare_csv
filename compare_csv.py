@@ -17,7 +17,7 @@ if uploaded_file:
     if st.button("🚀 照合スタート！"):
         # ファイル読み込み
         df1 = pd.read_excel(uploaded_file, sheet_name=sheet1, header=3)
-        df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=0)
+        df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=1)
 
         # 列名トリム（空白除去）
         df1.columns = df1.columns.str.strip()
