@@ -2,11 +2,11 @@ import streamlit as st
 import pandas as pd
 from difflib import get_close_matches
 
-# 類似列名を探す関数
 def get_similar_column(columns, keyword):
-    columns = [col.strip() for col in columns]
+    columns = [str(col).strip() for col in columns]  # ←ここを修正
     matches = get_close_matches(keyword, columns, n=1, cutoff=0.6)
     return matches[0] if matches else None
+
 
 # ページ設定
 st.set_page_config(page_title="クーポン照合アプリ", layout="wide")
