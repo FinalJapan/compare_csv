@@ -19,30 +19,33 @@ if uploaded_file:
         df1 = pd.read_excel(uploaded_file, sheet_name=sheet1, header=3)
         df2 = pd.read_excel(uploaded_file, sheet_name=sheet2, header=0)
 
-    if "クーポン番号※" in df2.columns:
-        df2["マージ用コード"] = df2["クーポン番号※"]
-    else:
-        st.error("❌ ファイル②に『クーポン番号※』という列が見つかりませんでした。")
-        st.stop()
-
-        # 列名トリム
+        # 列名トリム（空白除去）
         df1.columns = df1.columns.str.strip()
         df2.columns = df2.columns.str.strip()
 
-        # 列名表示（折りたたみ）
+        # 列名確認（デバッグ用に折りたたみ表示）
         with st.expander("📝 シート①（依頼表）の列名一覧", expanded=False):
             st.write(df1.columns.tolist())
 
         with st.expander("📝 シート②（CMS）の列名一覧", expanded=False):
             st.write(df2.columns.tolist())
 
-        # マージキー
+        # マージ用コード列の存在確認
+        if "クーポン番号※" not in df2.columns:
+            st.error("❌ ファイル②に『クーポン番号※』という列が見つかりませんでした。")
+            st.stop()
+        if "クーポンＣＤ" not in df1.columns:
+            st.error("❌ ファイル①に『クーポンＣＤ』という列が見つかりませんでした。")
+            st.stop()
+
+        # マージキー作成
         df1["マージ用コード"] = df1["クーポンＣＤ"]
         df2["マージ用コード"] = df2["クーポン番号※"]
 
+        # マージ実行
         merged = pd.merge(df1, df2, on="マージ用コード", how="outer", indicator=True)
 
-        # 比較カラム
+        # 比較対象のカラム設定（左がdf1、右がdf2）
         comparison_columns = [
             ("商品・クーポン名称", "クーポン名/商品名※"),
             ("正価税込", "割引前価格（税込）"),
@@ -51,23 +54,24 @@ if uploaded_file:
             ("終了日", "利用終了日時(常/キ/エ)")
         ]
 
-        # 一致判定
+        # 一致判定カラム作成
         for col1, col2 in comparison_columns:
             if col1 in merged.columns and col2 in merged.columns:
                 merged[f"{col1} ⇄ {col2} 一致"] = merged[col1] == merged[col2]
 
-        # 判定列（✅ / ❌）
+        # 判定ロジック
         def get_status(row):
             if row["_merge"] != "both":
                 return "❌"
             for col1, col2 in comparison_columns:
-                if f"{col1} ⇄ {col2} 一致" in row and row[f"{col1} ⇄ {col2} 一致"] is False:
+                key = f"{col1} ⇄ {col2} 一致"
+                if key in row and not row[key]:
                     return "❌"
             return "✅"
 
         merged["判定"] = merged.apply(get_status, axis=1)
 
-        # 表示列＋リネーム
+        # 表示カラム整形
         display_cols = ["マージ用コード", "判定"]
         renamed_cols = {
             "マージ用コード": "クーポンコード",
@@ -82,7 +86,7 @@ if uploaded_file:
 
         df_display = merged[display_cols].rename(columns=renamed_cols)
 
-        # 表示（縦スクロール対応、横スクロールなし）
+        # 表示
         st.markdown("### ✅ 照合結果（全件表示）")
         st.data_editor(
             df_display,
